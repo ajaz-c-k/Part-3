@@ -1,7 +1,14 @@
 const express = require("express");
+const morgan = require("morgan");
 const app = express();
 
-app.use(express.json());
+app.use(express.json()); // Middleware to parse JSON bodies
+
+// Custom token to log POST request body
+morgan.token("body", (req) => JSON.stringify(req.body));
+
+// Use morgan with custom logging format to log POST data
+app.use(morgan(":method :url :status :res[content-length] - :response-time ms :body"));
 
 let persons = [
   {
@@ -78,8 +85,14 @@ app.get("/info", (request, response) => {
   response.send(`
     <p>Phonebook has info for ${persons.length} people</p>
     <p>${currentDate}</p>
-    `);
+  `);
 });
+
+// Middleware for unknown endpoints (404 handler)
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({ error: 'unknown endpoint' });
+};
+app.use(unknownEndpoint);
 
 const PORT = 3001;
 app.listen(PORT, () => {
